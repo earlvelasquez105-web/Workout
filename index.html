@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Workout Tracker</title>
+
+<style>
+:root{
+--bg:#0f0f10;
+--card:#1a1a1d;
+--card2:#242428;
+--text:#f5f5f5;
+--muted:#b8b8b8;
+--border:#2e2e33;
+
+/* day type colors */
+--push:#ef4444;
+--pull:#3b82f6;
+--legs:#22c55e;
+--upper:#a855f7;
+--lower:#eab308;
+--arms:#f97316;
+--rest:#6b7280;
+
+/* muscle colors */
+--chest:#ec4899;
+--back:#06b6d4;
+--shoulders:#8b5cf6;
+--arms-muscle:#f59e0b;
+--legs-muscle:#84cc16;
+--core:#14b8a6;
+}
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+background:var(--bg);
+color:var(--text);
+}
+
+.app{
+max-width:430px;
+margin:auto;
+min-height:100vh;
+padding-bottom:40px;
+}
+
+.header{
+padding:20px 16px 10px;
+text-align:center;
+}
+
+.title{
+font-size:24px;
+font-weight:700;
+}
+
+.subtitle{
+font-size:13px;
+color:var(--muted);
+margin-top:4px;
+}
+
+.tabs{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:8px;
+padding:10px 16px 0;
+}
+
+.tab{
+padding:10px;
+border-radius:10px;
+border:1px solid var(--border);
+background:var(--card);
+color:var(--text);
+font-weight:600;
+cursor:pointer;
+transition:0.15s ease;
+}
+
+.tab.active{
+background:white;
+color:black;
+}
+
+.screen{
+padding:16px;
+}
+
+.hidden{display:none}
+
+.card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:14px;
+padding:14px;
+margin-bottom:14px;
+}
+
+label{
+font-size:13px;
+color:var(--muted);
+}
+
+input,select{
+width:100%;
+padding:10px;
+margin-top:6px;
+border-radius:8px;
+border:1px solid var(--border);
+background:var(--card2);
+color:var(--text);
+margin-bottom:8px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:10px;
+border:none;
+font-weight:600;
+cursor:pointer;
+}
+
+button.primary{
+background:white;
+color:black;
+}
+
+.exercise{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:10px;
+margin-top:10px;
+padding:12px;
+border-radius:10px;
+background:var(--card2);
+border-left:6px solid transparent;
+position:relative;
+}
+
+.exercise.muscle-chest{border-left-color:var(--chest)}
+.exercise.muscle-back{border-left-color:var(--back)}
+.exercise.muscle-shoulders{border-left-color:var(--shoulders)}
+.exercise.muscle-arms{border-left-color:var(--arms-muscle)}
+.exercise.muscle-legs{border-left-color:var(--legs-muscle)}
+.exercise.muscle-core{border-left-color:var(--core)}
+
+.exercise-main{
+flex:1;
+min-width:0;
+}
+
+.exercise-actions{
+position:relative;
+flex:0 0 auto;
+}
+
+.more-btn{
+width:34px;
+height:34px;
+padding:0;
+margin-top:0;
+border-radius:50%;
+background:#34343a;
+color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:18px;
+line-height:1;
+}
+
+.more-menu{
+position:absolute;
+right:0;
+top:40px;
+min-width:120px;
+background:#1f1f23;
+border:1px solid var(--border);
+border-radius:10px;
+padding:6px;
+box-shadow:0 8px 20px rgba(0,0,0,0.35);
+z-index:20;
+}
+
+.menu-item{
+width:100%;
+margin-top:0;
+padding:10px;
+background:transparent;
+color:var(--text);
+text-align:left;
+border-radius:8px;
+}
+
+.menu-item:hover{
+background:#2b2b31;
+}
+
+.menu-item.delete{
+color:#f87171;
+}
+
+.calendar{
+display:grid;
+grid-template-columns:repeat(7,minmax(0,1fr));
+gap:8px;
+width:100%;
+}
+
+.day{
+aspect-ratio:1;
+min-width:0;
+border-radius:10px;
+border:1px solid var(--border);
+background:var(--card2);
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+cursor:pointer;
+font-weight:600;
+font-size:13px;
+color:white;
+overflow:hidden;
+}
+
+.day.selected{
+outline:2px solid white;
+outline-offset:-2px;
+}
+
+.day.push{box-shadow:inset 0 0 0 2px var(--push)}
+.day.pull{box-shadow:inset 0 0 0 2px var(--pull)}
+.day.legs{box-shadow:inset 0 0 0 2px var(--legs)}
+.day.upper{box-shadow:inset 0 0 0 2px var(--upper)}
+.day.lower{box-shadow:inset 0 0 0 2px var(--lower)}
+.day.arms{box-shadow:inset 0 0 0 2px var(--arms)}
+.day.rest{box-shadow:inset 0 0 0 2px var(--rest)}
+
+.calendar-header{
+display:flex;
+justify-content:space-between;
+margin-bottom:12px;
+align-items:center;
+gap:10px;
+}
+
+.calendar-arrow{
+width:74px;
+padding:8px 0;
+margin-top:0;
+flex:0 0 74px;
+background:#f3f4f6;
+color:black;
+font-size:18px;
+line-height:1;
+}
+
+.month-title{
+font-weight:700;
+font-size:16px;
+text-align:center;
+flex:1;
+}
+
+.weekdays{
+display:grid;
+grid-template-columns:repeat(7,minmax(0,1fr));
+text-align:center;
+font-size:12px;
+color:var(--muted);
+margin-bottom:6px;
+}
+
+.type-label{
+font-size:9px;
+color:var(--muted);
+margin-top:2px;
+text-transform:uppercase;
+}
+
+.day.selected .type-label{
+color:white;
+}
+
+.small-muted{
+font-size:12px;
+color:var(--muted);
+}
+
+.edit-grid{
+display:grid;
+gap:8px;
+margin-top:8px;
+}
+
+.inline-buttons{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+}
+
+.secondary-btn{
+background:#34343a;
+color:var(--text);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="header">
+<div class="title">Workout Tracker</div>
+<div class="subtitle">Minimal training log</div>
+</div>
+
+<div class="tabs">
+<button class="tab active" id="tabToday" type="button">Today</button>
+<button class="tab" id="tabCalendar" type="button">Calendar</button>
+<button class="tab" id="tabProgress" type="button">Progress</button>
+</div>
+
+<div class="screen" id="todayScreen">
+
+<div class="card">
+<label>Workout Type</label>
+<select id="workoutType">
+<option>Push</option>
+<option>Pull</option>
+<option>Legs</option>
+<option>Upper</option>
+<option>Lower</option>
+<option>Arms</option>
+<option>Rest</option>
+</select>
+</div>
+
+<div class="card">
+<label>Exercise</label>
+<input id="exercise" placeholder="-">
+
+<label>Muscle Group</label>
+<select id="muscleGroup">
+<option>Chest</option>
+<option>Back</option>
+<option>Shoulders</option>
+<option>Arms</option>
+<option>Legs</option>
+<option>Core</option>
+</select>
+
+<label>Weight</label>
+<input id="weight" placeholder="-">
+
+<label>Reps</label>
+<input id="reps" placeholder="-">
+
+<button class="primary" id="addBtn" type="button">Add Exercise</button>
+</div>
+
+<div class="card">
+<div id="todayList"></div>
+</div>
+
+</div>
+
+<div class="screen hidden" id="calendarScreen">
+
+<div class="card">
+<div class="calendar-header">
+<button class="calendar-arrow" id="prevMonth" type="button">←</button>
+<div class="month-title" id="monthTitle"></div>
+<button class="calendar-arrow" id="nextMonth" type="button">→</button>
+</div>
+
+<div class="weekdays">
+<div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+</div>
+
+<div class="calendar" id="calendar"></div>
+</div>
+
+<div class="card">
+<div id="selectedDate"></div>
+<div class="small-muted" id="selectedType"></div>
+<div id="selectedWorkouts"></div>
+</div>
+
+</div>
+
+<div class="screen hidden" id="progressScreen">
+<div class="card">Charts coming soon</div>
+</div>
+
+</div>
+
+<script>
+let workouts=JSON.parse(localStorage.getItem("workouts"))||{};
+let today=new Date().toISOString().split('T')[0];
+let selectedDate=today;
+let viewDate=new Date();
+let openMenuKey=null;
+let editingKey=null;
+
+function save(){
+  localStorage.setItem("workouts",JSON.stringify(workouts));
+}
+
+function muscleClassName(muscle){
+  const map={
+    'Chest':'muscle-chest',
+    'Back':'muscle-back',
+    'Shoulders':'muscle-shoulders',
+    'Arms':'muscle-arms',
+    'Legs':'muscle-legs',
+    'Core':'muscle-core'
+  };
+  return map[muscle]||'';
+}
+
+function formatDate(dateStr){
+  const d=new Date(dateStr+"T12:00:00");
+  return d.toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+}
+
+function addWorkout(){
+  let type=document.getElementById("workoutType").value;
+  let exercise=document.getElementById("exercise").value.trim();
+  let muscle=document.getElementById("muscleGroup").value;
+  let weight=document.getElementById("weight").value.trim();
+  let reps=document.getElementById("reps").value.trim();
+
+  if(exercise==="") return;
+
+  if(!workouts[today]){
+    workouts[today]={type:type,exercises:[]};
+  }
+
+  workouts[today].type=type;
+  workouts[today].exercises.push({exercise,muscle,weight,reps});
+
+  save();
+  renderToday();
+  buildCalendar();
+  renderSelected();
+
+  document.getElementById("exercise").value="";
+  document.getElementById("weight").value="";
+  document.getElementById("reps").value="";
+}
+
+function toggleMenu(key){
+  openMenuKey = openMenuKey===key ? null : key;
+  renderToday();
+  renderSelected();
+}
+
+function startEdit(date,index){
+  editingKey=`${date}-${index}`;
+  openMenuKey=null;
+  renderToday();
+  renderSelected();
+}
+
+function cancelEdit(){
+  editingKey=null;
+  renderToday();
+  renderSelected();
+}
+
+function saveEdit(date,index){
+  const exercise=document.getElementById(`edit-exercise-${date}-${index}`).value.trim();
+  const muscle=document.getElementById(`edit-muscle-${date}-${index}`).value;
+  const weight=document.getElementById(`edit-weight-${date}-${index}`).value.trim();
+  const reps=document.getElementById(`edit-reps-${date}-${index}`).value.trim();
+
+  if(!exercise || !workouts[date] || !workouts[date].exercises[index]) return;
+
+  workouts[date].exercises[index]={exercise,muscle,weight,reps};
+  editingKey=null;
+  save();
+  renderToday();
+  renderSelected();
+}
+
+function deleteWorkout(date,index){
+  if(!workouts[date] || !workouts[date].exercises[index]) return;
+  workouts[date].exercises.splice(index,1);
+  if(workouts[date].exercises.length===0){
+    delete workouts[date];
+  }
+  openMenuKey=null;
+  editingKey=null;
+  save();
+  renderToday();
+  buildCalendar();
+  renderSelected();
+}
+
+function muscleOptions(selected){
+  const options=['Chest','Back','Shoulders','Arms','Legs','Core'];
+  return options.map(opt=>`<option ${opt===selected?'selected':''}>${opt}</option>`).join('');
+}
+
+function renderExerciseList(targetEl,data,date){
+  targetEl.innerHTML="";
+  if(!data || !data.exercises || data.exercises.length===0){
+    return;
+  }
+
+  data.exercises.forEach((w,index)=>{
+    const key=`${date}-${index}`;
+    let div=document.createElement("div");
+    div.className=`exercise ${muscleClassName(w.muscle)}`;
+
+    if(editingKey===key){
+      div.innerHTML=`
+        <div class="exercise-main">
+          <div class="edit-grid">
+            <input id="edit-exercise-${date}-${index}" value="${w.exercise}">
+            <select id="edit-muscle-${date}-${index}">${muscleOptions(w.muscle)}</select>
+            <input id="edit-weight-${date}-${index}" value="${w.weight}">
+            <input id="edit-reps-${date}-${index}" value="${w.reps}">
+            <div class="inline-buttons">
+              <button class="primary" type="button">Save</button>
+              <button class="secondary-btn" type="button">Cancel</button>
+            </div>
+          </div>
+        </div>
+      `;
+      const buttons=div.querySelectorAll('button');
+      buttons[0].onclick=()=>saveEdit(date,index);
+      buttons[1].onclick=cancelEdit;
+    } else {
+      div.innerHTML=`
+        <div class="exercise-main">
+          <strong>${w.exercise}</strong><br>
+          ${w.muscle} • ${w.weight} x ${w.reps}
+        </div>
+        <div class="exercise-actions">
+          <button class="more-btn" type="button">⋯</button>
+          ${openMenuKey===key ? `
+            <div class="more-menu">
+              <button class="menu-item edit" type="button">Edit</button>
+              <button class="menu-item delete" type="button">Delete</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      div.querySelector('.more-btn').onclick=(e)=>{ e.stopPropagation(); toggleMenu(key); };
+      if(openMenuKey===key){
+        const menuButtons=div.querySelectorAll('.menu-item');
+        menuButtons[0].onclick=()=>startEdit(date,index);
+        menuButtons[1].onclick=()=>deleteWorkout(date,index);
+      }
+    }
+    targetEl.appendChild(div);
+  });
+}
+
+function renderToday(){
+  let list=document.getElementById("todayList");
+  renderExerciseList(list, workouts[today], today);
+}
+
+function buildCalendar(){
+  let cal=document.getElementById("calendar");
+  cal.innerHTML="";
+
+  let y=viewDate.getFullYear();
+  let m=viewDate.getMonth();
+  let firstDay=new Date(y,m,1).getDay();
+  let days=new Date(y,m+1,0).getDate();
+
+  let monthNames=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("monthTitle").innerText=monthNames[m]+" "+y;
+
+  for(let i=0;i<firstDay;i++){
+    let empty=document.createElement("div");
+    cal.appendChild(empty);
+  }
+
+  for(let i=1;i<=days;i++){
+    let date=`${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    let d=document.createElement("div");
+    d.className="day";
+
+    if(workouts[date]){
+      let type=String(workouts[date].type||'').toLowerCase();
+      d.classList.add(type);
+    }
+    if(date===selectedDate) d.classList.add("selected");
+
+    const typeLabel=workouts[date]?String(workouts[date].type||'').slice(0,3):'';
+    d.innerHTML=`<div>${i}</div>${typeLabel?`<div class="type-label">${typeLabel}</div>`:''}`;
+
+    d.onclick=()=>{
+      selectedDate=date;
+      renderSelected();
+      buildCalendar();
+    };
+
+    cal.appendChild(d);
+  }
+}
+
+function renderSelected(){
+  let title=document.getElementById("selectedDate");
+  let typeEl=document.getElementById("selectedType");
+  let list=document.getElementById("selectedWorkouts");
+
+  title.innerText=formatDate(selectedDate);
+  typeEl.innerText=workouts[selectedDate]?`Workout Type: ${workouts[selectedDate].type}`:'';
+  renderExerciseList(list, workouts[selectedDate], selectedDate);
+}
+
+function changeMonth(n){
+  viewDate.setMonth(viewDate.getMonth()+n);
+  buildCalendar();
+}
+
+function setActiveTab(tabName){
+  const tabMap={
+    today:'tabToday',
+    calendar:'tabCalendar',
+    progress:'tabProgress'
+  };
+  document.querySelectorAll('.tab').forEach(tab=>tab.classList.remove('active'));
+  document.getElementById(tabMap[tabName]).classList.add('active');
+}
+
+function switchTab(tab){
+  let screens=["todayScreen","calendarScreen","progressScreen"];
+  screens.forEach(s=>document.getElementById(s).classList.add("hidden"));
+
+  if(tab==="today") document.getElementById("todayScreen").classList.remove("hidden");
+  if(tab==="calendar") document.getElementById("calendarScreen").classList.remove("hidden");
+  if(tab==="progress") document.getElementById("progressScreen").classList.remove("hidden");
+
+  setActiveTab(tab);
+}
+
+document.addEventListener('click',()=>{
+  if(openMenuKey!==null){
+    openMenuKey=null;
+    renderToday();
+    renderSelected();
+  }
+});
+
+document.getElementById("tabToday").onclick=()=>switchTab("today");
+document.getElementById("tabCalendar").onclick=()=>switchTab("calendar");
+document.getElementById("tabProgress").onclick=()=>switchTab("progress");
+document.getElementById("prevMonth").onclick=()=>changeMonth(-1);
+document.getElementById("nextMonth").onclick=()=>changeMonth(1);
+document.getElementById("addBtn").onclick=addWorkout;
+
+document.getElementById('todayScreen').addEventListener('click',(e)=>e.stopPropagation());
+document.getElementById('calendarScreen').addEventListener('click',(e)=>e.stopPropagation());
+
+renderToday();
+buildCalendar();
+renderSelected();
+setActiveTab('today');
+</script>
+
+</body>
+</html>
